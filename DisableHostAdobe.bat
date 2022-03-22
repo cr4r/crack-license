@@ -35,7 +35,6 @@ SET HOSTFILE=%windir%\system32\drivers\etc\hosts
 SET HOSTFILE=%windir%\hosts
 )
 ECHO.>> %HOSTFILE%
-ECHO 127.0.0.1  test2.internetdownloadmanager.com>> %HOSTFILE%
 
 ECHO # ====== Block Adobe ======>> %HOSTFILE%
 ECHO 127.0.0.1 lmlicenses.wip4.adobe.com>> %HOSTFILE%
@@ -44,6 +43,36 @@ ECHO 127.0.0.1 na1r.services.adobe.com>> %HOSTFILE%
 ECHO 127.0.0.1 hlrcv.stage.adobe.com>> %HOSTFILE%
 ECHO 127.0.0.1 practivate.adobe.com >> %HOSTFILE%
 ECHO 127.0.0.1 activate.adobe.com>> %HOSTFILE%
+ECHO 127.0.0.1 lm.licenses.adobe.com>> %HOSTFILE%
+ECHO 127.0.0.1 practivate.adobe.com>> %HOSTFILE%
+ECHO 127.0.0.1 ereg.adobe.com>> %HOSTFILE%
+ECHO 127.0.0.1 activate.wip3.adobe.com>> %HOSTFILE%
+ECHO 127.0.0.1 wip3.adobe.com>> %HOSTFILE%
+ECHO 127.0.0.1 3dns-3.adobe.com>> %HOSTFILE%
+ECHO 127.0.0.1 3dns-2.adobe.com>> %HOSTFILE%
+ECHO 127.0.0.1 adobe-dns.adobe.com>> %HOSTFILE%
+ECHO 127.0.0.1 adobe-dns-2.adobe.com>> %HOSTFILE%
+ECHO 127.0.0.1 adobe-dns-3.adobe.com>> %HOSTFILE%
+ECHO 127.0.0.1 ereg.wip3.adobe.com>> %HOSTFILE%
+ECHO 127.0.0.1 activate-sea.adobe.com>> %HOSTFILE%
+ECHO 127.0.0.1 wwis-dubc1-vip60.adobe.com>> %HOSTFILE%
+ECHO 127.0.0.1 activate-sjc0.adobe.com>> %HOSTFILE%
+ECHO 127.0.0.1 adobe.activate.com>> %HOSTFILE%
+ECHO 127.0.0.1 hl2rcv.adobe.com>> %HOSTFILE%
+ECHO 127.0.0.1 209.34.83.73:443>> %HOSTFILE%
+ECHO 127.0.0.1 209.34.83.73:43>> %HOSTFILE%
+ECHO 127.0.0.1 209.34.83.73>> %HOSTFILE%
+ECHO 127.0.0.1 209.34.83.67:443>> %HOSTFILE%
+ECHO 127.0.0.1 209.34.83.67:43>> %HOSTFILE%
+ECHO 127.0.0.1 209.34.83.67>> %HOSTFILE%
+ECHO 127.0.0.1 ood.opsource.net>> %HOSTFILE%
+ECHO 127.0.0.1 CRL.VERISIGN.NET>> %HOSTFILE%
+ECHO 127.0.0.1 199.7.52.190:80>> %HOSTFILE%
+ECHO 127.0.0.1 199.7.52.190>> %HOSTFILE%
+ECHO 127.0.0.1 adobeereg.com>> %HOSTFILE%
+ECHO 127.0.0.1 OCSP.SPO1.VERISIGN.COM>> %HOSTFILE%
+ECHO 127.0.0.1 199.7.54.72:80>> %HOSTFILE%
+ECHO 127.0.0.1 199.7.54.7>> %HOSTFILE%
 ECHO # ====== Selesai Block Adobe ======>> %HOSTFILE%
 IPCONFIG -flushdns
 ECHO.

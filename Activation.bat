@@ -8,7 +8,7 @@ set name=
 
 
 ::============================================================================================
-:    Credits:
+:    Credits: Coders Family
 ::============================================================================================
 ::
 
@@ -19,7 +19,7 @@ start %SystemRoot%\Sysnative\cmd.exe /c ""!_cmdf!" %*"
 exit /b
 )
 
-:: Re-launch the script with ARM32 process if it was initiated by x64 process on ARM64 Windows
+:: Menjalankan ulang jika menggunakan arm32.
 
 if exist %SystemRoot%\Windows\SyChpe32\kernel32.dll if exist %SystemRoot%\SysArm32\cmd.exe if %PROCESSOR_ARCHITECTURE%==AMD64 (
 set "_cmdf=%~f0"
@@ -28,7 +28,7 @@ start %SystemRoot%\SysArm32\cmd.exe /c ""!_cmdf!" %*"
 exit /b
 )
 
-::  Set Path variable, it helps if it is misconfigured in the system
+:: Membuat variabel untuk mengurangi kesalahan :)
 
 set "SysPath=%SystemRoot%\System32"
 set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
@@ -72,11 +72,12 @@ if defined Silent call :begin %nul% & exit /b
 :begin
 
 ::========================================================================================================================================
+:: Mengecek versi OS anda
 
 if not exist "%_psc%" (
 %nceline%
-echo Powershell is not installed in the system.
-echo Aborting...
+echo Powershell tidak ada di sistem windows anda.
+echo Keluar ...
 goto done
 )
 
@@ -107,64 +108,62 @@ for /f "tokens=2*" %%a in ('reg query "HKCU\Software\DownloadManager" /v ExePath
 setlocal EnableDelayedExpansion
 
 ::========================================================================================================================================
-
-::  Elevate script as admin and pass arguments and preventing loop
+::  Mengubah CMD menjadi administrator
 ::  Thanks to @hearywarlot [ https://forums.mydigitallife.net/threads/.74332/ ] for the VBS method.
 ::  Thanks to @abbodi1406 for the powershell method and solving special characters issue in file path name.
 
 %nul% reg query HKU\S-1-5-19 || (
+  if not defined _elev (
+    %nul% del /f /q "!_vbsf!"
+    (
+    echo Set strArg=WScript.Arguments.Named
+    echo Set strRdlproc = CreateObject^("WScript.Shell"^).Exec^("rundll32 kernel32,Sleep"^)
+    echo With GetObject^("winmgmts:\\.\root\CIMV2:Win32_Process.Handle='" ^& strRdlproc.ProcessId ^& "'"^)
+    echo With GetObject^("winmgmts:\\.\root\CIMV2:Win32_Process.Handle='" ^& .ParentProcessId ^& "'"^)
+    echo If InStr ^(.CommandLine, WScript.ScriptName^) ^<^> 0 Then
+    echo strLine = Mid^(.CommandLine, InStr^(.CommandLine , "/File:"^) + Len^(strArg^("File"^)^) + 8^)
+    echo End If
+    echo End With
+    echo .Terminate
+    echo End With
+    echo CreateObject^("Shell.Application"^).ShellExecute "cmd.exe", "/c " ^& chr^(34^) ^& chr^(34^) ^& strArg^("File"^) ^& chr^(34^) ^& strLine ^& chr^(34^), "", "runas", 1
+    )>"!_vbsf!"
 
-if not defined _elev (
-%nul% del /f /q "!_vbsf!"
-(
-echo Set strArg=WScript.Arguments.Named
-echo Set strRdlproc = CreateObject^("WScript.Shell"^).Exec^("rundll32 kernel32,Sleep"^)
-echo With GetObject^("winmgmts:\\.\root\CIMV2:Win32_Process.Handle='" ^& strRdlproc.ProcessId ^& "'"^)
-echo With GetObject^("winmgmts:\\.\root\CIMV2:Win32_Process.Handle='" ^& .ParentProcessId ^& "'"^)
-echo If InStr ^(.CommandLine, WScript.ScriptName^) ^<^> 0 Then
-echo strLine = Mid^(.CommandLine, InStr^(.CommandLine , "/File:"^) + Len^(strArg^("File"^)^) + 8^)
-echo End If
-echo End With
-echo .Terminate
-echo End With
-echo CreateObject^("Shell.Application"^).ShellExecute "cmd.exe", "/c " ^& chr^(34^) ^& chr^(34^) ^& strArg^("File"^) ^& chr^(34^) ^& strLine ^& chr^(34^), "", "runas", 1
-)>"!_vbsf!"
-
-(%nul% wmic.exe alias /? && %nul% cscript //NoLogo "!_vbsf!" /File:"!_batf!" -el %_args%) && (
-del /f /q "!_vbsf!"
-exit /b
-) || (
-del /f /q "!_vbsf!"
-%nul% %_psc% "start cmd.exe -arg '/c \"!_PSarg:'=''!\"' -verb runas" && (
-exit /b
-)
-)
-)
-%nceline%
-echo This script require administrator privileges.
-echo To do so, right click on this script and select 'Run as administrator'.
-goto done
+    (%nul% wmic.exe alias /? && %nul% cscript //NoLogo "!_vbsf!" /File:"!_batf!" -el %_args%) && (
+      del /f /q "!_vbsf!"
+      exit /b
+    ) || (
+      del /f /q "!_vbsf!"
+      %nul% %_psc% "start cmd.exe -arg '/c \"!_PSarg:'=''!\"' -verb runas" && (
+        exit /b
+      )
+    )
+  )
+  %nceline%
+  echo Skrip ini memerlukan hak administrator.
+  echo Klik kanan pada file lalu 'Run as administrator'.
+  goto done
 )
 
 ::========================================================================================================================================
 
-:: Below code also works for ARM64 Windows 10 (including x64 bit emulation)
+:: Kode di bawah ini juga berfungsi untuk ARM64 Windows 10 (termasuk emulasi x64 bit)
 
 reg query "HKLM\Hardware\Description\System\CentralProcessor\0" /v "Identifier" | find /i "x86" 1>nul && set arch=x86|| set arch=x64
 
 if not exist "!IDMan!" (
-if %arch%==x64 set "IDMan=%ProgramFiles(x86)%\Internet Download Manager\IDMan.exe"
-if %arch%==x86 set "IDMan=%ProgramFiles%\Internet Download Manager\IDMan.exe"
+  if %arch%==x64 set "IDMan=%ProgramFiles(x86)%\Internet Download Manager\IDMan.exe"
+  if %arch%==x86 set "IDMan=%ProgramFiles%\Internet Download Manager\IDMan.exe"
 )
 
 if "%arch%"=="x86" (
-set "CLSID=HKCU\Software\Classes\CLSID"
-set "HKLM=HKLM\Software\Internet Download Manager"
-set "_tok=5"
+  set "CLSID=HKCU\Software\Classes\CLSID"
+  set "HKLM=HKLM\Software\Internet Download Manager"
+  set "_tok=5"
 ) else (
-set "CLSID=HKCU\Software\Classes\Wow6432Node\CLSID"
-set "HKLM=HKLM\SOFTWARE\Wow6432Node\Internet Download Manager"
-set "_tok=6"
+  set "CLSID=HKCU\Software\Classes\Wow6432Node\CLSID"
+  set "HKLM=HKLM\SOFTWARE\Wow6432Node\Internet Download Manager"
+  set "_tok=6"
 )
 
 set _temp=%SystemRoot%\Temp
@@ -174,41 +173,44 @@ set "idmcheck=tasklist /fi "imagename eq idman.exe" | findstr /i "idman.exe" >nu
 ::========================================================================================================================================
 
 if defined Unattended (
-if defined reset goto _reset
-if defined activate goto _activate
+  if defined reset goto _reset
+  if defined activate goto _activate
 )
 
+
+::  Class MainMenu
 :MainMenu
 
 cls
 title  Aktivasi IDM - Coders Family
 mode 90, 30
 
-:: Check firewall status
+:: Cek status firewall
 
 set /a _ena=0
 set /a _dis=0
 for %%# in (DomainProfile PublicProfile StandardProfile) do (
-for /f "skip=2 tokens=2*" %%a in ('reg query HKLM\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\%%# /v EnableFirewall 2^>nul') do (
-if /i %%b equ 0x1 (set /a _ena+=1) else (set /a _dis+=1)
-)
+  for /f "skip=2 tokens=2*" %%a in ('reg query HKLM\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\%%# /v EnableFirewall 2^>nul') do (
+    if /i %%b equ 0x1 (set /a _ena+=1) else (set /a _dis+=1)
+  )
 )
 
 if %_ena%==3 (
-set _status=Enabled
-set _col=%_Green%
+  set _status=Enabled
+  set _col=%_Green%
 )
 
 if %_dis%==3 (
-set _status=Disabled
-set _col=%_Red%
+  set _status=Disabled
+  set _col=%_Red%
 )
 
 if not %_ena%==3 if not %_dis%==3 (
-set _status=Status_Unclear
-set _col=%_Yellow%
+  set _status=Status_Unclear
+  set _col=%_Yellow%
 )
 
+::  Mematikan IDM Otomatis
 %idmcheck% && taskkill /f /im idman.exe
 
 echo:
@@ -227,32 +229,36 @@ echo:          [C] Cara penggunaan
 echo:          [X] Exit                                        
 echo:          _____________________________________________
 echo:   
-call :_color2 %_White% "        " %_Green% "  Enter a menu option in the Keyboard [1,2,3,4,6]"
-choice /C:ARIDFHCX /N
+choice /C:ARIDFHCX /m "   Silahkan Pilih"
 set _erl=%errorlevel%
 if %_erl%==8 exit /b
 if %_erl%==7 call :readme&goto MainMenu
-if %_erl%==6 call :hostFile&goto MainMenu
+if %_erl%==6 goto hostFile
 if %_erl%==5 call :_tog_Firewall&goto MainMenu
-if %_erl%==4 call :blockAdobe&goto MainMenu
-if %_erl%==3 call :blockIDM&goto MainMenu
+if %_erl%==4 goto blockAdobe
+if %_erl%==3 goto blockIDM
 if %_erl%==2 goto _reset
 if %_erl%==1 goto _activate
 goto :MainMenu
 
 ::========================================================================================================================================
+::  Memblokir situs IDM
 :blockIDM
 
 start cmd /k "%~dp0\DisableHostIDM.bat"
+goto MainMenu
 ::========================================================================================================================================
 
 ::========================================================================================================================================
+::  Memblokir situs Adobe
 :blockAdobe
 
 start cmd /k "%~dp0\DisableHostAdobe.bat"
+goto MainMenu
 ::========================================================================================================================================
 
 ::========================================================================================================================================
+::  Mematikan / Hidupkan Firewall windows
 :_tog_Firewall
 
 if %_status%==Enabled (
@@ -264,13 +270,16 @@ exit /b
 ::========================================================================================================================================
 
 ::========================================================================================================================================
+::  Membuka file hosts di windows
 :hostFile
 
 set "_hostFile=%windir%\system32\drivers\etc\hosts"
 start notepad "%_hostFile%"
+goto MainMenu
 ::========================================================================================================================================
 
 ::========================================================================================================================================
+:: Baca Readme
 :readme
 
 set "_ReadMe=%SystemRoot%\Temp\ReadMe.txt"
@@ -297,15 +306,15 @@ exit/b
 :_reset
 
 if not defined Unattended (
-mode 93, 32
-%nul% %_psc% "&%_buf%"
+  mode 93, 32
+  %nul% %_psc% "&%_buf%"
 )
 
 echo:
 set _error=
 
 reg query "HKCU\Software\DownloadManager" "/v" "Serial" %nul% && (
-%idmcheck% && taskkill /f /im idman.exe
+  %idmcheck% && taskkill /f /im idman.exe
 )
 
 if exist "!_appdata!\DMCache\settings.bak" del /s /f /q "!_appdata!\DMCache\settings.bak"
@@ -317,9 +326,9 @@ echo:
 echo %line%
 echo:
 if not defined _error (
-call :_color %Green% "Trial IDM berhasil Di Aktifkan."
+  call :_color %Green% "Trial IDM berhasil Di Aktifkan."
 ) else (
-call :_color %Red% "Gagal mengaktifkan Trial"
+  call :_color %Red% "Gagal mengaktifkan Trial"
 )
 
 goto done
@@ -337,23 +346,10 @@ echo:
 set _error=
 
 if not exist "!IDMan!" (
-call :_color %Red% "IDM [Internet Download Manager] belum di install."
-echo You can download it from  https://www.internetdownloadmanager.com/download.html
-goto done
+  call :_color %Red% "IDM [Internet Download Manager] belum di install."
+  echo Bisa di download di  https://www.internetdownloadmanager.com/download.html
+  goto done
 )
-
-:: Internet check with internetdownloadmanager.com ping and port 80 test
-
-:: ping -n 1 internetdownloadmanager.com >nul || (
-:: %_psc% "$t = New-Object Net.Sockets.TcpClient;try{$t.Connect("""internetdownloadmanager.com""", 80)}catch{};$t.Connected" | findstr /i true 1>nul
-:: )
-
-:: if not [%errorlevel%]==[0] (
-:: call :_color %Red% "Unable to connect internetdownloadmanager.com, aborting..."
-:: goto done
-:: )
-
-echo Internet is connected.
 
 %idmcheck% && taskkill /f /im idman.exe
 
@@ -379,11 +375,11 @@ echo %line%
 echo:
 echo:
 if defined Unattended (
-timeout /t 3
-exit /b
+  timeout /t 3
+  exit /b
 )
 
-echo Press any key to return...
+echo Tekan apa saja untuk kembali...
 pause >nul
 goto MainMenu
 
@@ -398,7 +394,7 @@ call :reset
 echo:
 echo %line%
 echo:
-call :_color %Red% "IDM gagal d aktifkan."
+call :_color %Red% "IDM gagal di aktifkan."
 exit /b
 ::========================================================================================================================================
 
@@ -423,10 +419,10 @@ exit /b
 :register_IDM
 
 echo:
-echo Applying registration details...
+echo Mereset registrasi IDM...
 echo:
 
-If not defined name set name=Tonec FZE
+If not defined name set name=cr4r
 
 set "reg=HKCU\SOFTWARE\DownloadManager /v FName /t REG_SZ /d "CR4R"" & call :_rcont
 set "reg=HKCU\SOFTWARE\DownloadManager /v LName /t REG_SZ /d "Coders Family"" & call :_rcont
@@ -435,7 +431,8 @@ set "reg=HKCU\SOFTWARE\DownloadManager /v Serial /t REG_SZ /d "FOX6H-3KWH4-7TSIN
 set "reg=HKCU\SOFTWARE\DownloadManager /v LstCheck /t REG_SZ /d "10/10/99"" & call :_rcont
 
 echo:
-echo Berhasil Bosss
+echo Registrasi IDM Berhasil di reset
+echo Anda mempunyai 30 hari untuk mengaktifkan ulang IDM
 ::========================================================================================================================================
 
 ::========================================================================================================================================
@@ -443,11 +440,11 @@ echo Berhasil Bosss
 
 echo:
 if not defined _derror (
-echo Required registry keys were created successfully.
+  echo registri yang diperlukan berhasil dibuat.
 ) else (
-if not defined _fileexist call :_color %Red% "Tidak dapat mengunduh file dengan IDM."
-call :_color %Red% "Gagal membuat registri yang diperlukan."
-call :_color %Magenta% "Cobalah untuk menonaktifkan Windows Firewall"
+  if not defined _fileexist call :_color %Red% "Tidak dapat mengunduh file dengan IDM."
+  call :_color %Red% "Gagal membuat registri yang diperlukan."
+  call :_color %Magenta% "Cobalah untuk menonaktifkan Windows Firewall"
 )
 
 echo:
@@ -508,11 +505,11 @@ reg add %reg% /t REG_DWORD /d "1" /f %nul%
 :_add_key
 
 if [%errorlevel%]==[0] (
-set "reg=%reg:"=%"
-echo Added - !reg!
+  set "reg=%reg:"=%"
+  echo Added - !reg!
 ) else (
-set _error=1
-set "reg=%reg:"=%"
+  set _error=1
+  set "reg=%reg:"=%"
 %_psc% write-host 'Failed' -fore 'white' -back 'DarkRed'  -NoNewline&echo  - !reg!
 )
 exit /b
@@ -528,9 +525,9 @@ reg query %CLSID% > %regdata%
 %nul% %_psc% "(gc %regdata%) -replace 'HKEY_CURRENT_USER', 'HKCU' | Out-File -encoding ASCII %regdata%"
 
 for /f %%a in (%regdata%) do (
-for /f "tokens=%_tok% delims=\" %%# in ("%%a") do (
-echo %%#|findstr /r "{.*-.*-.*-.*-.*}" >nul && (set "reg=%%a" & call :scan_key)
-)
+  for /f "tokens=%_tok% delims=\" %%# in ("%%a") do (
+    echo %%#|findstr /r "{.*-.*-.*-.*-.*}" >nul && (set "reg=%%a" & call :scan_key)
+  )
 )
 
 if exist %regdata% del /f /q %regdata% %nul%
@@ -549,23 +546,23 @@ exit /b
 )
 
 for /f "skip=2 tokens=*" %%a in ('reg query %reg% /ve 2^>nul') do echo %%a|findstr /r /e "[^0-9]" >nul || (
-%_action%
-exit /b
+  %_action%
+  exit /b
 )
 
 for /f "skip=2 tokens=3" %%a in ('reg query %reg%\Version /ve 2^>nul') do echo %%a|findstr /r "[^0-9]" >nul || (
-%_action%
-exit /b
+  %_action%
+  exit /b
 )
 
 for /f "skip=2 tokens=1" %%a in ('reg query %reg% 2^>nul') do echo %%a| findstr /i "MData Model scansk Therad" >nul && (
-%_action%
-exit /b
+  %_action%
+  exit /b
 )
 
 for /f "skip=2 tokens=*" %%a in ('reg query %reg% /ve 2^>nul') do echo %%a| find /i "+" >nul && (
-%_action%
-exit /b
+  %_action%
+  exit /b
 )
 
 exit/b
@@ -577,17 +574,17 @@ exit/b
 reg delete %reg% /f %nul%
 
 if not [%errorlevel%]==[0] if defined take_permission (
-%nul% call :reg_own "%reg%" preserve S-1-1-0
-reg delete %reg% /f %nul%
+  %nul% call :reg_own "%reg%" preserve S-1-1-0
+  reg delete %reg% /f %nul%
 )
 
 if [%errorlevel%]==[0] (
-set "reg=%reg:"=%"
-echo Deleted - !reg!
+  set "reg=%reg:"=%"
+  echo Deleted - !reg!
 ) else (
-set "reg=%reg:"=%"
-set _error=1
-%_psc% write-host 'Failed' -fore 'white' -back 'DarkRed'  -NoNewline & echo  - !reg!
+  set "reg=%reg:"=%"
+  set _error=1
+  %_psc% write-host 'Failed' -fore 'white' -back 'DarkRed'  -NoNewline & echo  - !reg!
 )
 
 exit /b
@@ -601,13 +598,13 @@ exit /b
 reg delete %reg% /f %nul%
 
 if not [%errorlevel%]==[0] (
-set "reg=%reg:"=%"
-echo Locked - !reg!
-set /a lockedkeys+=1
+  set "reg=%reg:"=%"
+  echo Locked - !reg!
+  set /a lockedkeys+=1
 ) else (
-set _error=1
-set "reg=%reg:"=%"
-%_psc% write-host 'Failed' -fore 'white' -back 'DarkRed'  -NoNewline&echo  - !reg!
+  set _error=1
+  set "reg=%reg:"=%"
+  %_psc% write-host 'Failed' -fore 'white' -back 'DarkRed'  -NoNewline&echo  - !reg!
 )
 
 exit /b
@@ -637,25 +634,25 @@ $x=$s-eq'none';function Own1($k){$t=$HK.OpenSubKey($k,2,'TakeOwnership');if($t){
 };if($old){$own=1;$w[1]=$o.GetOwner($sps)};$o.SetOwner($w[0]);$t.SetAccessControl($o); $c=$HK.OpenSubKey($k,2,'ChangePermissions')
 $p=$c.GetAccessControl(2);if($y){$p.SetAccessRuleProtection(1,1)};$p.ResetAccessRule($rar);if($x){$p.RemoveAccessRuleAll($rar)}
 $c.SetAccessControl($p);if($own){$o.SetOwner($w[1]);$t.SetAccessControl($o)};if($s){$subkeys=$HK.OpenSubKey($k).GetSubKeyNames()
-foreach($n in $subkeys){Own1 "$k\$n"}}}};Own1 $rk[1];if($env:VO){get-acl Registry::$path|fl} #:Own1: lean & mean snippet by AveYo
+foreach($n in $subkeys){Own1 "$k\$n"}}}};Own1 $rk[1];if($env:VO){get-acl Registry::$path|fl} #:Own1: powered by cr4r
 
 ::========================================================================================================================================
 
 :_color
 
 if %winbuild% GEQ 10586 (
-echo %esc%[%~1%~2%esc%[0m
+  echo %esc%[%~1%~2%esc%[0m
 ) else (
-call :batcol %~1 "%~2"
+  call :batcol %~1 "%~2"
 )
 exit /b
 
 :_color2
 
 if %winbuild% GEQ 10586 (
-echo %esc%[%~1%~2%esc%[%~3%~4%esc%[0m
+  echo %esc%[%~1%~2%esc%[%~3%~4%esc%[0m
 ) else (
-call :batcol %~1 "%~2" %~3 "%~4"
+  call :batcol %~1 "%~2" %~3 "%~4"
 )
 exit /b
 
@@ -750,14 +747,14 @@ exit /b
 :txt:
 _________________________________
 
-   Activation:
+   Script aktivasi otomatis:
 _________________________________
 
- - This script applies registry lock method to activate Internet download manager (IDM).
+ - Script ini menerapkan metode kunci registri untuk mengaktifkan Internet download manager (IDM) dan Adobe.
 
- - This method requires Internet at the time of activation.
+ - Mungkin membutuhkan internet untuk aktivasi.
 
- - IDM updates can be installed directly without having to activate again.
+ - Jika sudah mengaktifkan IDM, tidak akan ada update lagi dari IDM.
 
  - After the activation, if in some case, the IDM starts to show activation nag screen, 
    then just run the activation option again.
@@ -767,19 +764,16 @@ _________________________________
    Reset IDM Activation / Trial:
 _________________________________
 
- - Internet download manager provides 30 days trial period, you can use this script to 
-   reset this Activation / Trial period whenever you want.
+ - IDM akan direset dan menjadi trial selama 30 hari
  
- - This option also can be used to restore status if in case the IDM reports fake serial
-   key and other similar errors.
+ - Jika IDM di aktifkan secara penuh, script ini akan menjadi solusi sementara anda
 
 _________________________________
 
    OS requirement:
 _________________________________
 
- - Project is supported only for Windows 7/8/8.1/10 and their Server equivalent.
-
+ - Projek ini sudah di coba di windows 7/8/8.1/10 dan mungkin berfungsi di server.
 _________________________________
 
  - Advanced Info:
@@ -803,27 +797,19 @@ _________________________________
  - Troubleshooting steps:
 _________________________________
 
-   - If any other activator was used to activate IDM previously then make sure to properly
-     uninstall it with that same activator (if there is an option), this is especially important
-     if any registry / firewall block method was used.
+   -  Aktivasi IDM dengan menekan tombol A
+      Pastikan aktivasi sebelumnya sudah di aktifkan dengan benar, Jika masih maka
+      Matikan firewall, lalu tekan I untuk memblokir situs IDM
 
-   - Uninstall the IDM from control panel.
+   - Hapus IDM melalui control panel atau aplikasi uninstaller lainnya.
 
-   - Make sure the latest original IDM setup is used for the installation,
-     you can download it from https://www.internetdownloadmanager.com/download.html
+   - Tetap gunakan IDM yang asli yang dapat di download di website resminya
 
-   - Now install the IDM and use the activate option in this script and if failed then,
+   - Install IDM terbaru jika gagal, maka
 
-     - Disable windows firewall with the script option, this help in case of leftover entries of
-       previously used activator (some file patch method also creates firewall entries).
-
-     - Some security programs may block this script, this is false-positive, as long as you 
-       downloaded the file from original post (mentioned below in this page), temporary suspend
-       Antivirus realtime protection, or exclude the downloaded file/extracted folder from scanning.
-
-     - If you are still facing any issues, please contact me (mentioned below in this page).
-
-
+     - Matikan firewall 
+     - Matikan antivirus yang dapat menyebabkan membuka blokiran situs IDM/Adobe
+     - Editt program sendiri hehe
 ____________________________________________________________________________________________________
 :txt:
 
